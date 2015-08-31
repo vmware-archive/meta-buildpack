@@ -1,0 +1,12 @@
+#!/bin/bash
+
+SRCDIR=$(cd "$(dirname $0)/."  && pwd)
+TGTDIR=$(cd "$(dirname $0)/.." && pwd)
+NAME=$(basename "$SRCDIR")
+ZIPFILE="$TGTDIR/$NAME.zip"
+
+echo "Buildpack name: $NAME"
+echo "Source directory: $SRCDIR"
+echo "Target file: $ZIPFILE"
+
+zip "$ZIPFILE" "$SRCDIR"
