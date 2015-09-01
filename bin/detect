@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# bin/detect <build-dir>
+set -e
+
+# Check our environment. On the first pass we always claim, so that
+# we can control the invocation of other buildpacks. If we are being
+# re-invoked during our own compilation step, we decline, so that
+# the "real" buildpacks get a chance to claim the app.
+if [ -f ~/.decorator-buildpack-compiling ]
+then
+	echo >&2 Decorator buildpack passed on to other buildpacks
+	exit 1
+else
+	echo >&2 Decorator buildpack captured the build process
+	echo Decorator
+	exit 0
+fi
