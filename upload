@@ -9,4 +9,8 @@ echo "Buildpack name: $NAME"
 echo "Source directory: $SRCDIR"
 echo "Target file: $ZIPFILE"
 
-zip "$ZIPFILE" "$SRCDIR"
+rm -f "$ZIPFILE"
+zip -r "$ZIPFILE" "$SRCDIR"/*
+
+cf delete-buildpack -f "$NAME"
+cf create-buildpack "$NAME" "$ZIPFILE" 1 --enable
