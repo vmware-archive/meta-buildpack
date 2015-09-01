@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-echo "--- {}"
+# Propagate the start command from the "real" buildpack that ran during our
+# compile step. Note this does NOT properly populate the detected_buildpack
+# information in the staging_info file. The buildpack will show to be us.
+
+cat <<EOF
+---
+default_process_types:
+EOF
+
+cat /tmp/staged/staging_info.yml | sed '1,/^effective_procfile:/d'
