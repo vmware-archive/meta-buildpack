@@ -1,45 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env ruby
+# Encoding: utf-8
 # bin/compile <build-dir> <cache-dir> <env-dir>
-set -o pipefail
 
-# Set a flag for our detect script, so that when we re-invoke the
-# buildpack runner, our buildpack will pass, and the actual buildpack
-# will end up being invoked
-touch ~/.decorator-buildpack-compiling
+build_dir = ARGV[0]
+cache_dir = ARGV[1]
+env_dir   = ARGV[2]
 
-# Now recursively re-invoke the staging process to invoke buildpacks the normal way
-ruby /var/vcap/packages/dea_next/buildpacks/bin/run /var/vcap/data/dea_next/staging/*/plugin_config
-result=$?
+$stdout.sync = true
+$stderr.sync = true
 
-# Remove our flag
-rm ~/.decorator-buildpack-compiling
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
-# If the standard buildpack execution failed, propagate that failure here
-if [ "$result" -ne 0 ]
-then
-	exit "$result"
-fi
+require "decorator"
 
-# The standard build process succeeded. Now run the decorators...
-cat /var/vcap/data/dea_next/staging/*/plugin_config |
-grep '^- \"\?/var/vcap/data/dea_next/admin_buildpacks/' |
-sed "s/^- //" | sed 's/^\"//' | sed 's/\"$//' |
-while read buildpack
-do
-	if [ -f $buildpack/bin/decorate ]
-	then
-		framework=`$buildpack/bin/decorate`
-		claimed=$?
-		if [ "$claimed" -eq 0 ]
-		then
-			Running decorator "$framework"
-			$buildpack/bin/compile
-			result=$?
-			if [ "$result" -ne 0 ]
-			then
-				echo >&2 Decorator "$framework" failed
-				exit "$result"
-			fi
-		fi
-	fi
-done
+compile(build_dir, cache_dir, env_dir)

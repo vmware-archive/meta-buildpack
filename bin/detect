@@ -1,17 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
+# Encoding: utf-8
 # bin/detect <build-dir>
-set -e
 
-# Check our environment. On the first pass we always claim, so that
-# we can control the invocation of other buildpacks. If we are being
-# re-invoked during our own compilation step, we decline, so that
-# the "real" buildpacks get a chance to claim the app.
-if [ -f ~/.decorator-buildpack-compiling ]
-then
-	echo >&2 Decorator buildpack passed on to other buildpacks
-	exit 1
-else
-	echo >&2 Decorator buildpack captured the build process
-	echo Decorator
-	exit 0
-fi
+build_dir = ARGV[0]
+
+$stdout.sync = true
+$stderr.sync = true
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require "decorator"
+
+detect(build_dir)

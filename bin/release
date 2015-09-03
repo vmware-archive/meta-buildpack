@@ -1,13 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
+# Encoding: utf-8
 # bin/release <build-dir>
 
-# Propagate the start command from the "real" buildpack that ran during our
-# compile step. Note this does NOT properly populate the detected_buildpack
-# information in the staging_info file. The buildpack will show to be us.
+build_dir = ARGV[0]
 
-cat <<EOF
----
-default_process_types:
-EOF
+$stdout.sync = true
+$stderr.sync = true
 
-cat /tmp/staged/staging_info.yml | sed '1,/^effective_procfile:/d'
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require "decorator"
+
+release(build_dir)
