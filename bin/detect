@@ -8,10 +8,8 @@ set -e
 # the "real" buildpacks get a chance to claim the app.
 if [ -f ~/.decorator-buildpack-compiling ]
 then
-	echo >&2 Decorator buildpack passed on to other buildpacks
 	exit 1
 else
-	echo >&2 Decorator buildpack captured the build process
 	echo Decorator
 	exit 0
 fi

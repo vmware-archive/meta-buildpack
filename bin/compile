@@ -8,6 +8,7 @@ set -o pipefail
 touch ~/.decorator-buildpack-compiling
 
 # Now recursively re-invoke the staging process to invoke buildpacks the normal way
+echo >&2 '-----> [decorator-buildpack] Invoking standard buildpacks'
 ruby /var/vcap/packages/dea_next/buildpacks/bin/run /var/vcap/data/dea_next/staging/*/plugin_config
 result=$?
 
@@ -21,6 +22,7 @@ then
 fi
 
 # The standard build process succeeded. Now run the decorators...
+echo >&2 '-----> [decorator-buildpack] Evaluating decorators'
 cat /var/vcap/data/dea_next/staging/*/plugin_config |
 grep '^- \"\?/var/vcap/data/dea_next/admin_buildpacks/' |
 sed "s/^- //" | sed 's/^\"//' | sed 's/\"$//' |
@@ -32,14 +34,16 @@ do
 		claimed=$?
 		if [ "$claimed" -eq 0 ]
 		then
-			Running decorator "$framework"
+			echo >&2 '-----> [decorator-buildpack] Invoking decorator' "$framework" 
 			$buildpack/bin/compile
 			result=$?
 			if [ "$result" -ne 0 ]
 			then
-				echo >&2 Decorator "$framework" failed
+				echo >&2 '-----> [decorator-buildpack] Decorator' "$framework" 'failed'
 				exit "$result"
 			fi
 		fi
 	fi
 done
+
+echo >&2 '-----> [decorator-buildpack] Done' 
