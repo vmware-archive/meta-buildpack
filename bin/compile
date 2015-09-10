@@ -21,6 +21,8 @@ then
 	exit "$result"
 fi
 
+find /var/vcap -name decorate -print >&2
+
 # The standard build process succeeded. Now run the decorators...
 echo >&2 '-----> [decorator-buildpack] Evaluating decorators'
 cat /var/vcap/data/dea_next/staging/*/plugin_config |
@@ -35,13 +37,15 @@ do
 		if [ "$claimed" -eq 0 ]
 		then
 			echo >&2 '-----> [decorator-buildpack] Invoking decorator' "$framework" 
-			$buildpack/bin/compile
+			$buildpack/bin/compile $*
 			result=$?
 			if [ "$result" -ne 0 ]
 			then
 				echo >&2 '-----> [decorator-buildpack] Decorator' "$framework" 'failed'
 				exit "$result"
 			fi
+		else
+			echo >&2 '-----> [decorator-buildpack] Skipping decorator' "$framework" 
 		fi
 	fi
 done
