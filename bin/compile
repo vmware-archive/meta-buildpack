@@ -5,15 +5,15 @@ set -o pipefail
 # Set a flag for our detect script, so that when we re-invoke the
 # buildpack runner, our buildpack will pass, and the actual buildpack
 # will end up being invoked
-touch ~/.decorator-buildpack-compiling
+touch ~/.meta-buildpack-compiling
 
 # Now recursively re-invoke the staging process to invoke buildpacks the normal way
-echo >&2 '-----> [decorator-buildpack] Invoking standard buildpacks'
+echo >&2 '-----> [meta-buildpack] Invoking standard buildpacks'
 ruby /var/vcap/packages/dea_next/buildpacks/bin/run /var/vcap/data/dea_next/staging/*/plugin_config
 result=$?
 
 # Remove our flag
-rm ~/.decorator-buildpack-compiling
+rm ~/.meta-buildpack-compiling
 
 # If the standard buildpack execution failed, propagate that failure here
 if [ "$result" -ne 0 ]
@@ -21,10 +21,8 @@ then
 	exit "$result"
 fi
 
-find /var/vcap -name decorate -print >&2
-
 # The standard build process succeeded. Now run the decorators...
-echo >&2 '-----> [decorator-buildpack] Evaluating decorators'
+echo >&2 '-----> [meta-buildpack] Evaluating decorators'
 cat /var/vcap/data/dea_next/staging/*/plugin_config |
 grep '^- \"\?/var/vcap/data/dea_next/admin_buildpacks/' |
 sed "s/^- //" | sed 's/^\"//' | sed 's/\"$//' |
@@ -36,18 +34,16 @@ do
 		claimed=$?
 		if [ "$claimed" -eq 0 ]
 		then
-			echo >&2 '-----> [decorator-buildpack] Invoking decorator' "$framework" 
+			echo >&2 '-----> [meta-buildpack] Invoking decorator' "$framework" 
 			$buildpack/bin/compile $*
 			result=$?
 			if [ "$result" -ne 0 ]
 			then
-				echo >&2 '-----> [decorator-buildpack] Decorator' "$framework" 'failed'
+				echo >&2 '-----> [meta-buildpack] Decorator' "$framework" 'failed'
 				exit "$result"
 			fi
-		else
-			echo >&2 '-----> [decorator-buildpack] Skipping decorator' "$framework" 
 		fi
 	fi
 done
 
-echo >&2 '-----> [decorator-buildpack] Done' 
+echo >&2 '-----> [meta-buildpack] Done' 

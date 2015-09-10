@@ -6,10 +6,10 @@ set -e
 # we can control the invocation of other buildpacks. If we are being
 # re-invoked during our own compilation step, we decline, so that
 # the "real" buildpacks get a chance to claim the app.
-if [ -f ~/.decorator-buildpack-compiling ]
+if [ -f ~/.meta-buildpack-compiling ]
 then
 	exit 1
 else
-	echo Decorator
+	echo meta-buildpack
 	exit 0
 fi

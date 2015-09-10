@@ -2,7 +2,7 @@
 
 SRCDIR=$(cd "$(dirname $0)/."  && pwd)
 TGTDIR=$(cd "$(dirname $0)/.." && pwd)
-NAME=$(basename "$SRCDIR")
+NAME=$(basename "$SRCDIR" | sed s/-/_/g)
 ZIPFILE="$TGTDIR/$NAME.zip"
 
 echo "Buildpack name: $NAME"
