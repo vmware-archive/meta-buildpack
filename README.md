@@ -14,6 +14,24 @@ in order to do that. The same issue applies to things like Application Performan
 solutions that support multiple languages. If we separate the (N) language buildpacks
 from the (M) feature add-on buildpacks, we have reduced the problem to N+M instead.
 
+It is entirely possible to do this without a meta-buildpack by including the recursive invocation
+of buildpacks in each decorator, and requiring decorators to be at the top of the list. But that's
+just plain ugly.
+
+## <a name="decorators"></a>What is a Decorator
+
+A decorator is a special Cloud Foundry buildpack. Unlike a "real" buildpack, a decorator doesn't
+produce a droplet from source. Instead, it "decorates" (hence the name) an already produced droplet
+to implement some kind of add-on feature. Good examples of such add-on features might be:
+
+- Monitoring Agents
+- Configuration Management
+- Service Registration and Discovery
+
+Basically anything that can be injected into containers with little or no dependency on what language
+the application was written in. Splitting out this functionality into decorators avoids the need to
+fork and modify "real" buildpacks to implement such add-on functionality for multiple languages.
+
 ## How it works
 
 The meta-buildpack should be pushed to the top of the list of installed buildpacks in Cloud Foundry
@@ -33,6 +51,15 @@ Unlike language buildpacks, decorators are not mutually exclusive. The meta-buil
 all decorators that return true from their `decorate` scripts, so any number of them can be applied
 to a single droplet.
 
+## How it should work
+
+If this functionality is deemed useful by more people than just me, it should be implemented in the
+Cloud Foundry cloud controller, rather than requiring a special buildpack at the top of the list.
+But the meta-buildpack provides access to the feature before it's implemented in the core, so that
+we can prove the concept and gauge its appeal to other developers. Migrating support for this
+feature into Cloud Foundry later should have zero effect on decorators that have already been
+produced.
+
 ## How to install the meta-buildpack
 
 To install the meta-buildpack at the top of the buildpack list, simply run the provided upload
@@ -44,7 +71,7 @@ cd meta-buildpack
 ./upload
 ```
 
-## <a name="decorators"></a>How to write a decorator
+## How to write a decorator
 
 A decorator is installed and invoked just like any other buildpack, with a couple of significant
 differences.
