@@ -12,9 +12,9 @@ def detect(build_dir):
 	buildpack = detect_buildpack(build_dir)
 	decorators = detect_decorators(build_dir)
 	if len(decorators) == 0:
-		print buildpack + ' (no decorators apply)'
+		print buildpack.rstrip('\n') + ' (no decorators apply)'
 	else:
-		print buildpack + ' (with decorators ' + decorators.join(', ') + ')'
+		print buildpack.rstrip('\n') + ' (with decorators ' + decorators.join(', ') + ')'
 
 def detect_buildpack(build_dir):
 	for bp in buildpacks():
