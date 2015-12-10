@@ -10,7 +10,7 @@ echo "Source directory: $SRCDIR"
 echo "Target file: $ZIPFILE"
 
 rm -f "$ZIPFILE"
-zip -r "$ZIPFILE" "$SRCDIR"/*
+zip -r "$ZIPFILE" "$SRCDIR"/lib "$SRCDIR"/bin
 
 cf delete-buildpack -f "$NAME"
 cf create-buildpack "$NAME" "$ZIPFILE" 1 --enable

@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
-set -e
 
-# Check our environment. On the first pass we always claim, so that
-# we can control the invocation of other buildpacks. If we are being
-# re-invoked during our own compilation step, we decline, so that
-# the "real" buildpacks get a chance to claim the app.
-if [ -f ~/.meta-buildpack-compiling ]
-then
-	exit 1
-else
-	echo meta-buildpack
-	exit 0
-fi
+BIN_DIR=$(cd $(dirname $0); pwd)
+ROOT_DIR=$(dirname $BIN_DIR)
+BUILD_DIR=$1
+
+export BUILD_CMD=`ps -p $PPID -o command | tail -1`
+
+export PYTHONPATH="${PYTHONPATH}:$ROOT_DIR/lib"
+
+python -c "from meta_buildpack import detect; detect(\"${BUILD_DIR}\")"

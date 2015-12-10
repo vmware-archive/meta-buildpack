@@ -1,49 +1,14 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir> <env-dir>
-set -o pipefail
 
-# Set a flag for our detect script, so that when we re-invoke the
-# buildpack runner, our buildpack will pass, and the actual buildpack
-# will end up being invoked
-touch ~/.meta-buildpack-compiling
+BIN_DIR=$(cd $(dirname $0); pwd)
+ROOT_DIR=$(dirname $BIN_DIR)
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
 
-# Now recursively re-invoke the staging process to invoke buildpacks the normal way
-echo >&2 '-----> [meta-buildpack] Invoking standard buildpacks'
-ruby /var/vcap/packages/dea_next/buildpacks/bin/run /var/vcap/data/dea_next/staging/*/plugin_config
-result=$?
+export BUILD_CMD=`ps -p $PPID -o command | tail -1`
 
-# Remove our flag
-rm ~/.meta-buildpack-compiling
+export PYTHONPATH="${PYTHONPATH}:$ROOT_DIR/lib"
 
-# If the standard buildpack execution failed, propagate that failure here
-if [ "$result" -ne 0 ]
-then
-	exit "$result"
-fi
-
-# The standard build process succeeded. Now run the decorators...
-echo >&2 '-----> [meta-buildpack] Evaluating decorators'
-cat /var/vcap/data/dea_next/staging/*/plugin_config |
-grep '^- \"\?/var/vcap/data/dea_next/admin_buildpacks/' |
-sed "s/^- //" | sed 's/^\"//' | sed 's/\"$//' |
-while read buildpack
-do
-	if [ -f $buildpack/bin/decorate ]
-	then
-		framework=`$buildpack/bin/decorate`
-		claimed=$?
-		if [ "$claimed" -eq 0 ]
-		then
-			echo >&2 '-----> [meta-buildpack] Invoking decorator' "$framework" 
-			$buildpack/bin/compile $*
-			result=$?
-			if [ "$result" -ne 0 ]
-			then
-				echo >&2 '-----> [meta-buildpack] Decorator' "$framework" 'failed'
-				exit "$result"
-			fi
-		fi
-	fi
-done
-
-echo >&2 '-----> [meta-buildpack] Done' 
+python -c "from meta_buildpack import compile; compile(\"${BUILD_DIR}\", \"${CACHE_DIR}\", \"${ENV_DIR}\")"

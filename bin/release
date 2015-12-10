@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-# Propagate the start command from the "real" buildpack that ran during our
-# compile step. Note this does NOT properly populate the detected_buildpack
-# information in the staging_info file. The buildpack will show to be us.
+BIN_DIR=$(cd $(dirname $0); pwd)
+ROOT_DIR=$(dirname $BIN_DIR)
+BUILD_DIR=$1
 
-cat <<EOF
----
-default_process_types:
-EOF
+export BUILD_CMD=`ps -p $PPID -o command | tail -1`
 
-cat /tmp/staged/staging_info.yml | sed '1,/^effective_procfile:/d'
+export PYTHONPATH="${PYTHONPATH}:$ROOT_DIR/lib"
+
+python -c "from meta_buildpack import release; release(\"${BUILD_DIR}\")"
