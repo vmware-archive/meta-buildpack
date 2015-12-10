@@ -13,8 +13,10 @@ def detect(build_dir):
 	decorators = detect_decorators(build_dir)
 	if len(decorators) == 0:
 		print buildpack.rstrip('\n') + ' (no decorators apply)'
+	elif len(decorators) < 2:
+		print buildpack.rstrip('\n') + ' (with decorator ' + decorators[0] + ')'
 	else:
-		print buildpack.rstrip('\n') + ' (with decorators ' + decorators.join(', ') + ')'
+		print buildpack.rstrip('\n') + ' (with decorators ' + ', '.join(decorators) + ')'
 
 def detect_buildpack(build_dir):
 	for bp in buildpacks():
@@ -42,16 +44,16 @@ def detect_decorators(build_dir):
 			bin_decorate = os.path.join(buildpack_dir, bp, "bin", "decorate")
 			decorator = subprocess.check_output( [ bin_decorate, build_dir ] )
 			print >> sys.stderr, "[meta-buildpack] Selected decorator", decorator
-			decorators += {
-				'decorator_name': decorator,
+			decorators.append({
+				'decorator_name': decorator.rstrip('\n'),
 				'decorator_path': bp
-			}
+			})
 		except OSError: # Buildpack is not a decorator
 			pass
 		except subprocess.CalledProcessError as error:
 			pass
 	save_state('decorators', decorators)
-	return [ d['decorator_name'] for d in decorators ]
+	return [ d.get('decorator_name') for d in decorators ]
 
 """ compile """
 
@@ -63,7 +65,7 @@ def compile(build_dir, cache_dir, env_dir):
 	for decorator in decorators:
 		decorator_name = decorator['decorator_name']
 		decorator_path = decorator['decorator_path']
-		compile_buildpack(buildpack_name, buildpack_path, build_dir, cache_dir, env_dir)
+		compile_buildpack(decorator_name, decorator_path, build_dir, cache_dir, env_dir)
 
 def compile_buildpack(name, path, build_dir, cache_dir, env_dir):
 	print >> sys.stderr, "[meta-buildpack] Compiling with", name
