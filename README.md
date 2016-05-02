@@ -101,10 +101,9 @@ of this script is what enables the meta-buildpack to identify decorators:
    # Exit 0 if you want the decorator to run, non-zero if not
    ```
 
-   Remember that before the `decorate` script is invoked, the real buildpack will already have
-   been run, so the entire droplet is present in `BUILD_DIR` for you to inspect. So is the
-   application environment (including things like `VCAP_SERVICES` to determine what services
-   are bound to the application).
+   Remember that the `decorate` script is invoked during the detect stage, so the compile step of
+   the real buildpack has not yet been run. But the full application environment is available
+   (including things like `VCAP_SERVICES` to determine what services are bound to the application).
 
 3. If the `bin/decorate` script returns true (zero), the meta-buildpack will run the `bin/compile`
 script. The environment for that script looks exactly like it would for a real buildpack, *except*
