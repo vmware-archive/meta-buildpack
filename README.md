@@ -27,6 +27,7 @@ to implement some kind of add-on feature. Good examples of such add-on features 
 - Monitoring Agents
 - Configuration Management
 - Service Registration and Discovery
+- Sidecar Applications like Gateways and Client-Side Routers
 
 Basically anything that can be injected into containers with little or no dependency on what language
 the application was written in. Splitting out this functionality into decorators avoids the need to
