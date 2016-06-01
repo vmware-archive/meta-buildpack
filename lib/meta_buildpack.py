@@ -9,14 +9,19 @@ import subprocess
 """ detect """
 
 def detect(build_dir):
-	buildpack = detect_buildpack(build_dir)
+	buildpack = detect_buildpack(build_dir).rstrip('\n')
 	decorators = detect_decorators(build_dir)
 	if len(decorators) == 0:
-		print buildpack.rstrip('\n') + ' (no decorators apply)'
+		info = '(no decorators apply)'
 	elif len(decorators) < 2:
-		print buildpack.rstrip('\n') + ' (with decorator ' + decorators[0] + ')'
+		info = '(with decorator ' + decorators[0] + ')'
 	else:
-		print buildpack.rstrip('\n') + ' (with decorators ' + ', '.join(decorators) + ')'
+		info = '(with decorators ' + ', '.join(decorators) + ')'
+		if len(info) > 128:
+			info = '(with decorators)'
+	if (len(buildpack) + len(info)) >= 255:
+		buildpack = buildpack[:251 - len(info)] + '...'
+	print buildpack, info
 
 def detect_buildpack(build_dir):
 	for bp in buildpacks():
