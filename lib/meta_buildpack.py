@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# tile-generator
+# meta-buildpack
 #
 # Copyright (c) 2015-Present Pivotal Software, Inc. All Rights Reserved.
 #
