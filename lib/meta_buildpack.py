@@ -45,7 +45,7 @@ def detect_buildpack(build_dir):
 			buildpack_dir = getarg('buildpacksDir')
 			bin_detect = os.path.join(buildpack_dir, bp, "bin", "detect")
 			buildpack = subprocess.check_output( [ bin_detect, build_dir ] )
-			print >> sys.stderr, "[meta-buildpack] Selected buildpack", buildpack
+			print "[meta-buildpack] Selected buildpack", buildpack
 			save_state('buildpack_name', buildpack)
 			save_state('buildpack_path', bp)
 			return buildpack
@@ -64,7 +64,7 @@ def detect_decorators(build_dir):
 			buildpack_dir = getarg('buildpacksDir')
 			bin_decorate = os.path.join(buildpack_dir, bp, "bin", "decorate")
 			decorator = subprocess.check_output( [ bin_decorate, build_dir ] )
-			print >> sys.stderr, "[meta-buildpack] Selected decorator", decorator
+			print "[meta-buildpack] Selected decorator", decorator
 			decorators.append({
 				'decorator_name': decorator.rstrip('\n'),
 				'decorator_path': bp
@@ -89,7 +89,7 @@ def compile(build_dir, cache_dir, env_dir):
 		compile_buildpack(decorator_name, decorator_path, build_dir, cache_dir, env_dir)
 
 def compile_buildpack(name, path, build_dir, cache_dir, env_dir):
-	print >> sys.stderr, "[meta-buildpack] Compiling with", name
+	print "[meta-buildpack] Compiling with", name
 	try:
 		buildpack_dir = getarg('buildpacksDir')
 		bin_compile = os.path.join(buildpack_dir, path, "bin", "compile")
