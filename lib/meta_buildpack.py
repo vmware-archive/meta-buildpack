@@ -45,7 +45,6 @@ def detect_buildpack(build_dir):
 			buildpack_dir = getarg('buildpacksDir')
 			bin_detect = os.path.join(buildpack_dir, bp, "bin", "detect")
 			buildpack = subprocess.check_output( [ bin_detect, build_dir ] )
-			print "[meta-buildpack] Selected buildpack", buildpack
 			save_state('buildpack_name', buildpack)
 			save_state('buildpack_path', bp)
 			return buildpack
@@ -64,7 +63,6 @@ def detect_decorators(build_dir):
 			buildpack_dir = getarg('buildpacksDir')
 			bin_decorate = os.path.join(buildpack_dir, bp, "bin", "decorate")
 			decorator = subprocess.check_output( [ bin_decorate, build_dir ] )
-			print "[meta-buildpack] Selected decorator", decorator
 			decorators.append({
 				'decorator_name': decorator.rstrip('\n'),
 				'decorator_path': bp
@@ -93,6 +91,7 @@ def compile_buildpack(name, path, build_dir, cache_dir, env_dir):
 	try:
 		buildpack_dir = getarg('buildpacksDir')
 		bin_compile = os.path.join(buildpack_dir, path, "bin", "compile")
+		sys.stdout.flush()
 		subprocess.check_call( [ bin_compile, build_dir, cache_dir, env_dir ] )
 	except OSError: # Buildpack is mal-formed
 		print >> sys.stderr, "[meta-buildpack]", bin_compile, "not found"
