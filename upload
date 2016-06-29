@@ -26,7 +26,7 @@ echo "Source directory: $SRCDIR"
 echo "Target file: $ZIPFILE"
 
 rm -f "$ZIPFILE"
-zip -r "$ZIPFILE" "$SRCDIR"/lib "$SRCDIR"/bin
+(cd "$SRCDIR"; zip -r "$ZIPFILE" lib bin)
 
 cf delete-buildpack -f "$NAME"
 cf create-buildpack "$NAME" "$ZIPFILE" 1 --enable
