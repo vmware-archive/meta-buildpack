@@ -31,18 +31,27 @@ TEST_RUN_LOG=$(cd "$(dirname $0)/."  && pwd)/run.log
 
 (cd $TEST_APP_DIR; ./push 2>&1 | tee $TEST_RUN_LOG)
 
+function cleanup() {
+	(cd $TEST_BUILDPACK_DIR; ./delete)
+	(cd $TEST_DECORATOR_DIR; ./delete)
+}
+
 function assert_present() {
 	if ! grep "$1" "$TEST_RUN_LOG" >/dev/null; then
+		cleanup
+		echo
 		echo "FAILED - Output does not contain expected message:" $1
 		exit 1
 	fi
 }
 
-echo
 assert_present "^\[meta\-buildpack\] Compiling with test_buildpack"
 assert_present "^\[test\-buildpack\] Compiling"
 assert_present "^\[meta\-buildpack\] Compiling with test_decorator"
 assert_present "^\[test\-decorator\] Compiling"
 assert_present "^buildpack: test_buildpack (with decorator test_decorator)"
 
+cleanup
+
+echo
 echo "SUCCESS"
