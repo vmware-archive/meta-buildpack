@@ -10,7 +10,7 @@ resource_types:
 
 resources:
 
-- name: meta-buildpack-pipeline-image
+- name: pipeline-image
   type: docker-image
   source:
     repository: guidowb/meta-buildpack-pipeline
@@ -76,15 +76,19 @@ jobs:
   plan:
   - get: meta-buildpack-repo
     trigger: true
-  - put: meta-buildpack-pipeline-image
+  - put: pipeline-image
     params:
       build: meta-buildpack-repo/ci
 
 - name: create-dev
   plan:
-  - get: meta-buildpack-repo
-    passed: [ build-image ]
-    trigger: true
+  - aggregate:
+    - get: pipeline-image
+      passed: [ build-image ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ build-image ]
+      trigger: true
   - put: version
     params:
       pre: dev
@@ -107,16 +111,19 @@ jobs:
     params:
       bump: major
 
-- name: build
+- name: build-buildpack
   plan:
   - aggregate:
+    - get: pipeline-image
+      passed: [ create-dev ]
+      trigger: true
     - get: meta-buildpack-repo
       passed: [ create-dev ]
       trigger: true
     - get: version
       trigger: true
   - task: build-buildpack
-    image: meta-buildpack-pipeline-image
+    image: pipeline-image
     config:
       platform: linux
       inputs:
@@ -148,17 +155,20 @@ jobs:
 - name: test-1.6
   plan:
   - aggregate:
+    - get: pipeline-image
+      passed: [ build-buildpack ]
+      trigger: true
     - get: meta-buildpack-repo
-      passed: [ build ]
+      passed: [ build-buildpack ]
       trigger: true
     - get: meta-buildpack
-      passed: [ build ]
+      passed: [ build-buildpack ]
       trigger: true
     - get: version
-      passed: [ build ]
+      passed: [ build-buildpack ]
       trigger: true
   - task: test-buildpack
-    image: meta-buildpack-pipeline-image
+    image: pipeline-image
     config:
       platform: linux
       inputs:
