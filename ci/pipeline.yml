@@ -1,0 +1,164 @@
+---
+
+resource_types:
+
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+
+- name: meta-buildpack-repo
+  type: git
+  source:
+    branch: {{github-branch}}
+    uri: http://github.com/cf-platform-eng/meta-buildpack.git
+
+- name: meta-buildpack
+  type: s3
+  source:
+    bucket: {{s3-bucket}}
+    regexp: meta_buildpack-v(?P<version>.*)\.zip
+    access_key_id: {{s3-access-key}}
+    secret_access_key: {{s3-secret}}
+
+- name: pcf-environment-1-6
+  type: pool
+  source:
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
+    branch: master
+    pool: pcf1_6
+    private_key: {{github-pool-private-key}}
+
+- name: pcf-environment-1-7
+  type: pool
+  source:
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
+    branch: master
+    pool: pcf1_7
+    private_key: {{github-pool-private-key}}
+
+- name: pcf-environment-1-8
+  type: pool
+  source:
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
+    branch: master
+    pool: pcf
+    private_key: {{github-pool-private-key}}
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: {{slack-hook}}
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:cf-platform-eng/meta-buildpack
+    branch: version
+    file: version
+    private_key: {{github-semver-private-key}}
+
+jobs:
+
+- name: create-dev
+  plan:
+  - get: meta-buildpack-repo
+    trigger: true
+  - put: version
+    params:
+      pre: dev
+
+- name: create-patch
+  plan:
+  - put: version
+    params:
+      bump: patch
+
+- name: create-minor
+  plan:
+  - put: version
+    params:
+      bump: minor
+
+- name: create-major
+  plan:
+  - put: version
+    params:
+      bump: major
+
+
+- name: build
+  plan:
+  - aggregate:
+    - get: meta-buildpack-repo
+      passed: [ create-dev ]
+      trigger: true
+    - get: version
+      trigger: true
+  - task: build-buildpack
+    config:
+      platform: linux
+      image: docker:///ubuntu
+      inputs:
+      - name: meta-buildpack-repo
+      outputs:
+      - name: meta-buildpack
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          (cd meta-buildpack-repo; ./build)
+          VERSION=`cat version/version.txt`
+          cp meta_buildpack.zip meta-buildpack/meta_buildpack-v${VERSION}.zip
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack build failed, {{slack-href}}'
+          username: Meta Buildpack
+  - put: meta-buildpack
+    params:
+      file: meta-buildpack/meta_buildpack-*.zip
+
+- name: test-1.6
+  plan:
+  - aggregate:
+    - get: meta-buildpack-repo
+      passed: [ build ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ build ]
+      trigger: true
+    - get: version
+      passed: [ build ]
+      trigger: true
+  - task: test-buildpack
+    config:
+      platform: linux
+      image: docker:///ubuntu
+      inputs:
+      - name: meta-buildpack-repo
+      - name: meta-buildpack
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          cp meta-buildpack/meta_buildpack-v*.zip meta-buildpack-repo/meta_buildpack.zip
+          cd meta-buildpack-repo/test
+          ./run
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack test failed on PCF 1.6, {{slack-href}}'
+          username: Meta Buildpack
