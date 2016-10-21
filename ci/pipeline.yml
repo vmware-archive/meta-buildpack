@@ -10,6 +10,14 @@ resource_types:
 
 resources:
 
+- name: meta-buildpack-pipeline-image
+  type: docker-image
+  source:
+    repository: guidowb/meta-buildpack-pipeline
+    email: {{docker-hub-email}}
+    username: {{docker-hub-username}}
+    password: {{docker-hub-password}}
+
 - name: meta-buildpack-repo
   type: git
   source:
@@ -64,9 +72,18 @@ resources:
 
 jobs:
 
+- name: build-image
+  plan:
+  - get: meta-buildpack-repo
+    trigger: true
+  - put: meta-buildpack-pipeline-image
+    params:
+      build: meta-buildpack-repo/ci
+
 - name: create-dev
   plan:
   - get: meta-buildpack-repo
+    passed: [ build-image ]
     trigger: true
   - put: version
     params:
@@ -90,7 +107,6 @@ jobs:
     params:
       bump: major
 
-
 - name: build
   plan:
   - aggregate:
@@ -100,9 +116,9 @@ jobs:
     - get: version
       trigger: true
   - task: build-buildpack
+    image: meta-buildpack-pipeline-image
     config:
       platform: linux
-      image: docker:///ubuntu
       inputs:
       - name: meta-buildpack-repo
       outputs:
@@ -112,8 +128,10 @@ jobs:
         args:
         - -exc
         - |
+          apt-get update
+          apt-get -y install zip
           (cd meta-buildpack-repo; ./build)
-          VERSION=`cat version/version.txt`
+          VERSION=`cat version/number`
           cp meta_buildpack.zip meta-buildpack/meta_buildpack-v${VERSION}.zip
     on_failure:
       aggregate:
@@ -140,9 +158,9 @@ jobs:
       passed: [ build ]
       trigger: true
   - task: test-buildpack
+    image: meta-buildpack-pipeline-image
     config:
       platform: linux
-      image: docker:///ubuntu
       inputs:
       - name: meta-buildpack-repo
       - name: meta-buildpack
