@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+cf buildpacks | grep '^meta_buildpack' >/dev/null
+META_WAS_INSTALLED=$?
+
 set -e
 
 META_BUILDPACK_DIR=$(cd "$(dirname $0)/.."  && pwd)
@@ -34,6 +37,9 @@ TEST_RUN_LOG=$(cd "$(dirname $0)/."  && pwd)/run.log
 function cleanup() {
 	(cd $TEST_BUILDPACK_DIR; ./delete)
 	(cd $TEST_DECORATOR_DIR; ./delete)
+	if [ "$META_WAS_INSTALLED" -ne "0" ]; then
+		cf delete-buildpack -f meta_buildpack
+	fi
 }
 
 function assert_present() {
