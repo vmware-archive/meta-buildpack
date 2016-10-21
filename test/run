@@ -32,7 +32,13 @@ TEST_DECORATOR_DIR=$(cd "$(dirname $0)/test_decorator" && pwd)
 TEST_APP_DIR=$(cd "$(dirname $0)/test_app" && pwd)
 TEST_RUN_LOG=$(cd "$(dirname $0)/."  && pwd)/run.log
 
+cf delete-org -f meta-buildpack-test
+cf create-org meta-buildpack-test
+cf target -o meta-buildpack-test
+cf create-space test
+cf target -s test
 (cd $TEST_APP_DIR; ./push 2>&1 | tee $TEST_RUN_LOG)
+cf delete-org -f meta-buildpack-test
 
 function cleanup() {
 	(cd $TEST_BUILDPACK_DIR; ./delete)
