@@ -69,6 +69,7 @@ script. You must be logged in to Cloud Foundry with a role that allows buildpack
 ```
 git clone https://github.com/guidowb/meta-buildpack.git
 cd meta-buildpack
+./build
 ./upload
 ```
 
