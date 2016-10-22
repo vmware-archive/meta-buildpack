@@ -128,18 +128,18 @@ jobs:
       platform: linux
       inputs:
       - name: meta-buildpack-repo
+        path: meta-buildpack
+      - name: version
       outputs:
-      - name: meta-buildpack
+      - name: buildpack
       run:
         path: sh
         args:
         - -exc
         - |
-          apt-get update
-          apt-get -y install zip
-          (cd meta-buildpack-repo; ./build)
+          (cd meta-buildpack; ./build)
           VERSION=`cat version/number`
-          cp meta_buildpack.zip meta-buildpack/meta_buildpack-v${VERSION}.zip
+          cp meta-buildpack/meta_buildpack.zip buildpack/meta_buildpack-v${VERSION}.zip
     on_failure:
       aggregate:
       - put: slack-alert
@@ -150,7 +150,7 @@ jobs:
           username: Meta Buildpack
   - put: meta-buildpack
     params:
-      file: meta-buildpack/meta_buildpack-*.zip
+      file: buildpack/meta_buildpack-*.zip
 
 - name: test-1.6
   plan:
@@ -167,21 +167,32 @@ jobs:
     - get: version
       passed: [ build-buildpack ]
       trigger: true
+    - put: pcf-environment-1-6
+      params:
+        acquire: true
   - task: test-buildpack
     image: pipeline-image
     config:
       platform: linux
       inputs:
       - name: meta-buildpack-repo
+        path: meta-buildpack
       - name: meta-buildpack
+        path: buildpack
+      - name: pcf-environment-1-6
       run:
         path: sh
         args:
         - -exc
         - |
-          cp meta-buildpack/meta_buildpack-v*.zip meta-buildpack-repo/meta_buildpack.zip
-          cd meta-buildpack-repo/test
+          (cd pcf-environment-1-6; pcf target -o system -s system)
+          cp buildpack/meta_buildpack-v*.zip meta-buildpack/meta_buildpack.zip
+          cd meta-buildpack/test
           ./run
+    ensure:
+      put: pcf-environment-1-6
+      params:
+        release: pcf-environment-1-6
     on_failure:
       aggregate:
       - put: slack-alert
@@ -189,4 +200,104 @@ jobs:
           channel: {{slack-channel}}
           icon_emoji: ':concourse:'
           text: '{{github-branch}} Meta-buildpack test failed on PCF 1.6, {{slack-href}}'
+          username: Meta Buildpack
+
+- name: test-1.7
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: version
+      passed: [ build-buildpack ]
+      trigger: true
+    - put: pcf-environment-1-7
+      params:
+        acquire: true
+  - task: test-buildpack
+    image: pipeline-image
+    config:
+      platform: linux
+      inputs:
+      - name: meta-buildpack-repo
+        path: meta-buildpack
+      - name: meta-buildpack
+        path: buildpack
+      - name: pcf-environment-1-7
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          (cd pcf-environment-1-7; pcf target -o system -s system)
+          cp buildpack/meta_buildpack-v*.zip meta-buildpack/meta_buildpack.zip
+          cd meta-buildpack/test
+          ./run
+    ensure:
+      put: pcf-environment-1-7
+      params:
+        release: pcf-environment-1-7
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack test failed on PCF 1.7, {{slack-href}}'
+          username: Meta Buildpack
+
+- name: test-1.8
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: version
+      passed: [ build-buildpack ]
+      trigger: true
+    - put: pcf-environment-1-8
+      params:
+        acquire: true
+  - task: test-buildpack
+    image: pipeline-image
+    config:
+      platform: linux
+      inputs:
+      - name: meta-buildpack-repo
+        path: meta-buildpack
+      - name: meta-buildpack
+        path: buildpack
+      - name: pcf-environment-1-8
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          (cd pcf-environment-1-8; pcf target -o system -s system)
+          cp buildpack/meta_buildpack-v*.zip meta-buildpack/meta_buildpack.zip
+          cd meta-buildpack/test
+          ./run
+    ensure:
+      put: pcf-environment-1-8
+      params:
+        release: pcf-environment-1-8
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack test failed on PCF 1.8, {{slack-href}}'
           username: Meta Buildpack
