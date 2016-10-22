@@ -28,4 +28,4 @@ echo "Target file: $ZIPFILE"
 rm -f "$ZIPFILE"
 (cd "$SRCDIR"; touch .meta_buildpack_test_app; zip -r "$ZIPFILE" app .meta_buildpack_test_app)
 
-cf push "$NAME" -p "$ZIPFILE" -health-check-type none --no-route
+cf push "$NAME" -p "$ZIPFILE" --health-check-type none --no-route
