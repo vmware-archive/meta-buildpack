@@ -1,0 +1,31 @@
+---
+name: meta-buildpack
+icon_file: resources/icon_buildpacks.png
+label: Meta Buildpack
+description: Staging Process Enhancements for CF
+
+packages:
+- name: meta-buildpack
+  type: buildpack
+  buildpack_order: 0 # Go to head of list
+  path: meta_buildpack.zip
+  deploy: |
+    BUILDPACK1="$PACKAGE_PATH/{{ package.name }}/{{ package.path }}"
+    BUILDPACK2="$PACKAGE_PATH/{{ package.name }}/meta_buildpack-v{{context.version}}.zip"
+    cp "$BUILDPACK1" "$BUILDPACK2"
+    existing=`cf buildpacks | grep '^meta_buildpack'`
+    if [ -z "$existing" ]; then
+      cf create-buildpack meta_buildpack "$BUILDPACK2" 0
+    else
+      semver=`echo "$existing" | sed 's/.* meta_buildpack-v\(.*\)\.zip/\1/'`
+      if is_newer "{{context.version}}" "$semver"; then
+        cf update-buildpack meta_buildpack -p "$BUILDPACK2"
+      else
+        echo "Newer version ($semver) of meta_buildpack is already present"
+        echo "Refusing to overwrite it with an older version"
+      fi
+      cf update-buildpack meta_buildpack -i 0 --enable
+    fi
+  delete: |
+    # Intentional no-op, as others may have a dependency on this
+    echo "Leaving meta_buildpack installed as other releases may have a dependency on it"

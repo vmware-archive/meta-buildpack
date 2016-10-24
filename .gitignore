@@ -1,3 +1,6 @@
 *.zip
 *.log
 .meta*
+product/
+release/
+tile-history.yml
