@@ -63,11 +63,18 @@ produced.
 
 ## How to install the meta-buildpack
 
-To install the meta-buildpack at the top of the buildpack list, simply run the provided upload
-script. You must be logged in to Cloud Foundry with a role that allows buildpack installations.
+Releases of the meta-buildpack are available both as a BOSH release (a .tgz file), and as a
+Pivotal Cloud Foundry tile (a .pivotal file). The latest release is available here:
+
+- [Latest Release](https://github.com/cf-platform-eng/meta-buildpack/releases/latest)
+- [All Releases](https://github.com/cf-platform-eng/meta-buildpack/releases)
+
+For developers, to install the meta-buildpack directly from your clone of this repository to
+the top of the buildpack list, simply run the provided build and upload scripts. You must be logged
+in to Cloud Foundry with a role that allows buildpack installations.
 
 ```
-git clone https://github.com/guidowb/meta-buildpack.git
+git clone https://github.com/cf-platform-eng/meta-buildpack.git
 cd meta-buildpack
 ./build
 ./upload
