@@ -1,5 +1,22 @@
 ---
 
+groups:
+
+- name: ci
+  jobs:
+  - build-image
+  - build-buildpack
+  - test-1.6
+  - test-1.7
+  - test-1.8
+
+- name: release
+  jobs:
+  - create-patch
+  - create-minor
+  - create-major
+  - create-release
+
 resource_types:
 
 - name: slack-notification
@@ -18,17 +35,48 @@ resources:
     username: {{docker-hub-username}}
     password: {{docker-hub-password}}
 
+- name: dockerfile-repo
+  type: git
+  source:
+    paths: [ ci/Dockerfile ]
+    branch: {{github-branch}}
+    uri: http://github.com/cf-platform-eng/meta-buildpack.git
+
 - name: meta-buildpack-repo
   type: git
   source:
+    ignore_paths: [ ci/Dockerfile ]
     branch: {{github-branch}}
     uri: http://github.com/cf-platform-eng/meta-buildpack.git
+
+- name: meta-buildpack-release
+  type: github-release
+  source:
+    user: cf-platform-eng
+    repository: meta-buildpack
+    access_token: {{github-release-token}}
 
 - name: meta-buildpack
   type: s3
   source:
     bucket: {{s3-bucket}}
     regexp: meta_buildpack-v(?P<version>.*)\.zip
+    access_key_id: {{s3-access-key}}
+    secret_access_key: {{s3-secret}}
+
+- name: generated-tile
+  type: s3
+  source:
+    bucket: {{s3-bucket}}
+    regexp: meta-buildpack-(?P<version>.*)\.pivotal
+    access_key_id: {{s3-access-key}}
+    secret_access_key: {{s3-secret}}
+
+- name: tile-history
+  type: s3
+  source:
+    bucket: {{s3-bucket}}
+    regexp: tile\-history-(?P<version>.*)\.yml
     access_key_id: {{s3-access-key}}
     secret_access_key: {{s3-secret}}
 
@@ -74,24 +122,11 @@ jobs:
 
 - name: build-image
   plan:
-  - get: meta-buildpack-repo
+  - get: dockerfile-repo
     trigger: true
   - put: pipeline-image
     params:
-      build: meta-buildpack-repo/ci
-
-- name: create-dev
-  plan:
-  - aggregate:
-    - get: pipeline-image
-      passed: [ build-image ]
-      trigger: true
-    - get: meta-buildpack-repo
-      passed: [ build-image ]
-      trigger: true
-  - put: version
-    params:
-      pre: dev
+      build: dockerfile-repo/ci
 
 - name: create-patch
   plan:
@@ -115,13 +150,13 @@ jobs:
   plan:
   - aggregate:
     - get: pipeline-image
-      passed: [ create-dev ]
+      passed: [ build-image ]
       trigger: true
     - get: meta-buildpack-repo
-      passed: [ create-dev ]
       trigger: true
-    - get: version
-      trigger: true
+    - put: version
+      params:
+        pre: pre
   - task: build-buildpack
     image: pipeline-image
     config:
@@ -166,7 +201,6 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-      trigger: true
     - put: pcf-environment-1-6
       params:
         acquire: true
@@ -216,7 +250,6 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-      trigger: true
     - put: pcf-environment-1-7
       params:
         acquire: true
@@ -266,7 +299,6 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-      trigger: true
     - put: pcf-environment-1-8
       params:
         acquire: true
@@ -301,3 +333,76 @@ jobs:
           icon_emoji: ':concourse:'
           text: '{{github-branch}} Meta-buildpack test failed on PCF 1.8, {{slack-href}}'
           username: Meta Buildpack
+
+- name: create-release
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ test-1.6, test-1.7, test-1.8 ]
+    - get: meta-buildpack-repo
+      passed: [ test-1.6, test-1.7, test-1.8 ]
+    - get: meta-buildpack
+      passed: [ test-1.6, test-1.7, test-1.8 ]
+    - get: version
+      passed: [ test-1.6, test-1.7, test-1.8 ]
+    - get: tile-history
+  - put: version
+    params:
+      bump: final
+  - task: build-tile
+    image: pipeline-image
+    config:
+      platform: linux
+      inputs:
+      - name: meta-buildpack-repo
+        path: meta-buildpack
+      - name: meta-buildpack
+        path: buildpack
+      - name: tile-history
+      - name: version
+      outputs:
+      - name: generated-tile
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          HISTORY=`ls tile-history/tile-history-*.yml`
+          if [ -n "${HISTORY}" ]; then
+            cp ${HISTORY} meta-buildpack/tile-history.yml
+          fi
+          VERSION=`cat version/number`
+          cp buildpack/meta_buildpack-*.zip meta-buildpack/meta_buildpack.zip
+          (cd meta-buildpack; tile build "${VERSION}")
+          HISTORY="tile-history-${VERSION}.yml"
+          cp meta-buildpack/product/*.pivotal generated-tile
+          cp meta-buildpack/product/releases/*.tgz generated-tile
+          cp meta-buildpack/tile-history.yml generated-tile/tile-history-${VERSION}.yml
+          echo "Meta Buildpack v${VERSION}" > generated-tile/release-name.txt
+          echo "${VERSION}" > generated-tile/release-version.txt
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack build tile failed, {{slack-href}}'
+          username: Meta Buildpack
+  - put: version
+    params:
+      bump: patch
+  - put: tile-history
+    params:
+      file: generated-tile/tile-history-*.yml
+  - put: meta-buildpack-release
+    params:
+      name: generated-tile/release-name.txt
+      tag: generated-tile/release-version.txt
+      tag_prefix: v
+      globs:
+      - generated-tile/*.tgz
+      - generated-tile/*.pivotal
+  - put: generated-tile
+    params:
+      file: generated-tile/*.pivotal
+
