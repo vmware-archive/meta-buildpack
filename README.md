@@ -63,9 +63,11 @@ produced.
 
 ## How to install the meta-buildpack
 
+The meta-buildpack is continuously tested against all supported versions of Pivotal Cloud Foundry.
 Releases of the meta-buildpack are available both as a BOSH release (a .tgz file), and as a
 Pivotal Cloud Foundry tile (a .pivotal file). The latest release is available here:
 
+- [Concourse Pipeline](https://concourse.run-03.haas-71.pez.pivotal.io/teams/main/pipelines/meta-buildpack?groups=ci)
 - [Latest Release](https://github.com/cf-platform-eng/meta-buildpack/releases/latest)
 - [All Releases](https://github.com/cf-platform-eng/meta-buildpack/releases)
 
