@@ -118,3 +118,4 @@ about the order in which yours will be invoked.
 ## Available decorators
 
 - [Spring Cloud Config](https://github.com/cf-platform-eng/spring-config-decorator)
+
