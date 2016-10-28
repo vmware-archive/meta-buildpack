@@ -6,15 +6,17 @@ groups:
   jobs:
   - build-image
   - build-buildpack
+  - claim-1.6
+  - claim-1.7
+  - claim-1.8
   - test-1.6
   - test-1.7
   - test-1.8
 
 - name: release
   jobs:
-  - create-patch
-  - create-minor
-  - create-major
+  - bump-minor
+  - bump-major
   - create-release
 
 resource_types:
@@ -128,19 +130,13 @@ jobs:
     params:
       build: dockerfile-repo/ci
 
-- name: create-patch
-  plan:
-  - put: version
-    params:
-      bump: patch
-
-- name: create-minor
+- name: bump-minor
   plan:
   - put: version
     params:
       bump: minor
 
-- name: create-major
+- name: bump-major
   plan:
   - put: version
     params:
@@ -187,7 +183,7 @@ jobs:
     params:
       file: buildpack/meta_buildpack-*.zip
 
-- name: test-1.6
+- name: claim-1.6
   plan:
   - aggregate:
     - get: pipeline-image
@@ -201,9 +197,27 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-    - put: pcf-environment-1-6
-      params:
-        acquire: true
+  - put: pcf-environment-1-6
+    params:
+      acquire: true
+
+- name: test-1.6
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ claim-1.6 ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ claim-1.6 ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ claim-1.6 ]
+      trigger: true
+    - get: version
+      passed: [ claim-1.6 ]
+    - get: pcf-environment-1-6
+      passed: [ claim-1.6 ]
+      trigger: true
   - task: test-buildpack
     image: pipeline-image
     config:
@@ -236,7 +250,7 @@ jobs:
           text: '{{github-branch}} Meta-buildpack test failed on PCF 1.6, {{slack-href}}'
           username: Meta Buildpack
 
-- name: test-1.7
+- name: claim-1.7
   plan:
   - aggregate:
     - get: pipeline-image
@@ -250,9 +264,27 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-    - put: pcf-environment-1-7
-      params:
-        acquire: true
+  - put: pcf-environment-1-7
+    params:
+      acquire: true
+
+- name: test-1.7
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ claim-1.7 ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ claim-1.7 ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ claim-1.7 ]
+      trigger: true
+    - get: version
+      passed: [ claim-1.7 ]
+    - get: pcf-environment-1-7
+      passed: [ claim-1.7 ]
+      trigger: true
   - task: test-buildpack
     image: pipeline-image
     config:
@@ -285,7 +317,7 @@ jobs:
           text: '{{github-branch}} Meta-buildpack test failed on PCF 1.7, {{slack-href}}'
           username: Meta Buildpack
 
-- name: test-1.8
+- name: claim-1.8
   plan:
   - aggregate:
     - get: pipeline-image
@@ -299,9 +331,27 @@ jobs:
       trigger: true
     - get: version
       passed: [ build-buildpack ]
-    - put: pcf-environment-1-8
-      params:
-        acquire: true
+  - put: pcf-environment-1-8
+    params:
+      acquire: true
+
+- name: test-1.8
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ claim-1.8 ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ claim-1.8 ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ claim-1.8 ]
+      trigger: true
+    - get: version
+      passed: [ claim-1.8 ]
+    - get: pcf-environment-1-8
+      passed: [ claim-1.8 ]
+      trigger: true
   - task: test-buildpack
     image: pipeline-image
     config:
