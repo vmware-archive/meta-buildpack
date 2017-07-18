@@ -128,3 +128,4 @@ about the order in which yours will be invoked.
 
 - [Spring Cloud Config](https://github.com/cf-platform-eng/spring-config-decorator)
 - [Eureka Registrar](https://github.com/cf-platform-eng/eureka-registrar-decorator)
+- [Log Capture Sample](https://github.com/cf-platform-eng/log-capture-decorator)
