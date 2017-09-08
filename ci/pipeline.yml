@@ -9,9 +9,11 @@ groups:
   - claim-1.9
   - claim-1.10
   - claim-1.11
+  - claim-1.12
   - test-1.9
   - test-1.10
   - test-1.11
+  - test-1.12
 
 - name: release
   jobs:
@@ -99,6 +101,14 @@ resources:
     private_key: {{github-pool-private-key}}
 
 - name: pcf-environment-1-11
+  type: pool
+  source:
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
+    branch: master
+    pool: pcf1_11
+    private_key: {{github-pool-private-key}}
+
+- name: pcf-environment-1-12
   type: pool
   source:
     uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
@@ -384,17 +394,84 @@ jobs:
           text: '{{github-branch}} Meta-buildpack test failed on PCF 1.11, {{slack-href}}'
           username: Meta Buildpack
 
+- name: claim-1.12
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ build-buildpack ]
+      trigger: true
+    - get: version
+      passed: [ build-buildpack ]
+  - put: pcf-environment-1-12
+    params:
+      acquire: true
+
+- name: test-1.12
+  plan:
+  - aggregate:
+    - get: pipeline-image
+      passed: [ claim-1.12 ]
+      trigger: true
+    - get: meta-buildpack-repo
+      passed: [ claim-1.12 ]
+      trigger: true
+    - get: meta-buildpack
+      passed: [ claim-1.12 ]
+      trigger: true
+    - get: version
+      passed: [ claim-1.12 ]
+    - get: pcf-environment-1-12
+      passed: [ claim-1.12 ]
+      trigger: true
+  - task: test-buildpack
+    image: pipeline-image
+    config:
+      platform: linux
+      inputs:
+      - name: meta-buildpack-repo
+        path: meta-buildpack
+      - name: meta-buildpack
+        path: buildpack
+      - name: pcf-environment-1-12
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          (cd pcf-environment-1-12; pcf target -o system -s system)
+          cp buildpack/meta_buildpack-v*.zip meta-buildpack/meta_buildpack.zip
+          cd meta-buildpack/test
+          ./run
+    ensure:
+      put: pcf-environment-1-12
+      params:
+        release: pcf-environment-1-12
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: {{slack-channel}}
+          icon_emoji: ':concourse:'
+          text: '{{github-branch}} Meta-buildpack test failed on PCF 1.12, {{slack-href}}'
+          username: Meta Buildpack
+
 - name: create-release
   plan:
   - aggregate:
     - get: pipeline-image
-      passed: [ test-1.9, test-1.10, test-1.11 ]
+      passed: [ test-1.9, test-1.10, test-1.11, test-1.12 ]
     - get: meta-buildpack-repo
-      passed: [ test-1.9, test-1.10, test-1.11 ]
+      passed: [ test-1.9, test-1.10, test-1.11, test-1.12 ]
     - get: meta-buildpack
-      passed: [ test-1.9, test-1.10, test-1.11 ]
+      passed: [ test-1.9, test-1.10, test-1.11, test-1.12 ]
     - get: version
-      passed: [ test-1.9, test-1.10, test-1.11 ]
+      passed: [ test-1.9, test-1.10, test-1.11, test-1.12 ]
     - get: tile-history
   - put: version
     params:
