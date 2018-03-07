@@ -52,6 +52,12 @@ Unlike language buildpacks, decorators are not mutually exclusive. The meta-buil
 all decorators that return true from their `decorate` scripts, so any number of them can be applied
 to a single droplet.
 
+If your application requires you to specify a buildpack (either in the application manifest or
+when you `cf push`), the meta-buildpack will not be invoked and thus no decorators will be invoked
+either. If you are developing a custom decorator buildpack, you may want to provide an alternative
+method for leveraging your buildpack's functionality in the case when an application requires a
+specific buildpack to address this limitation.
+
 ## How it should work
 
 If this functionality is deemed useful by more people than just me, it should be implemented in the
@@ -103,11 +109,11 @@ of this script is what enables the meta-buildpack to identify decorators:
    ```
    #!/usr/bin/env bash
    # bin/decorate <build-dir>
-   
+
    BIN_DIR=$(cd $(dirname $0); pwd)
    ROOT_DIR=$(dirname $BIN_DIR)
    BUILD_DIR=$1
-   
+
    # Determine if the app meets the criteria to be decorated by this decorator
    # Exit 0 if you want the decorator to run, non-zero if not
    ```
