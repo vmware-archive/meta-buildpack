@@ -1,3 +1,12 @@
+> <b>NOTE: Meta-buildback is being deprecated</b><br/>
+> Changes to the core CloudFoundry lifecycle process are making it hard to guarantee
+> on-going compatibility with meta-buildpack and decorators. Some of the use cases for
+> decorators can now be solved by leveraging the new
+> [supply buildpack](https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html#supply-script)
+> functionality. If you are using meta-buildpack today and need to find an alternative,
+> or have a use case that would have been addressed by decorators, please open an issue
+> on this repo and we are happy to help you look for the right way to accomplish your task.
+
 # Meta-Buildpack
 
 This is a Cloud Foundry buildpack that enables decomposition of buildpacks into "real" buildpacks
