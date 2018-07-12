@@ -3,7 +3,9 @@
 > on-going compatibility with meta-buildpack and decorators. Some of the use cases for
 > decorators can now be solved by leveraging the new
 > [supply buildpack](https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html#supply-script)
-> functionality. If you are using meta-buildpack today and need to find an alternative,
+> functionality. Some examples can be found at the bottom of this page.
+>
+> If you are using meta-buildpack today and need to find an alternative,
 > or have a use case that would have been addressed by decorators, please open an issue
 > on this repo and we are happy to help you look for the right way to accomplish your task.
 
@@ -144,3 +146,14 @@ about the order in which yours will be invoked.
 - [Spring Cloud Config](https://github.com/cf-platform-eng/spring-config-decorator)
 - [Eureka Registrar](https://github.com/cf-platform-eng/eureka-registrar-decorator)
 - [Log Capture Sample](https://github.com/cf-platform-eng/log-capture-decorator)
+
+> <b>NOTE: Meta-buildback and the decorator pattern are being deprecated</b><br/>
+> Changes to the core CloudFoundry lifecycle process are making it hard to guarantee
+> on-going compatibility with meta-buildpack and decorators. Some of the use cases for
+> decorators can now be solved by leveraging the new
+> [supply buildpack](https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html#supply-script)
+> functionality. The following repositories provide examples equivalent to the above,
+> but using the new, supported, method of delivering supply buildpacks:
+
+- [New Eureka Registrar](https://github.com/cf-platform-eng/eureka-registrar-sidecar)
+- [New Spring Cloud Config](https://github.com/cf-platform-eng/spring-config-injection)
