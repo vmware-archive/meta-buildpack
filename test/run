@@ -57,12 +57,11 @@ function assert_present() {
 	fi
 }
 
-assert_present "^\[meta\-buildpack\] Compiling with test_buildpack"
-assert_present "^\[test\-buildpack\] Compiling"
-assert_present "^\[meta\-buildpack\] Compiling with test_decorator"
-assert_present "^\[test\-decorator\] Compiling"
-assert_present "^buildpack: test_buildpack (with decorator test_decorator)"
-
+assert_present "^\s*\[meta\-buildpack\] Compiling with test_buildpack"
+assert_present "^\s*\[test\-buildpack\] Compiling"
+assert_present "^\s*\[meta\-buildpack\] Compiling with test_decorator"
+assert_present "^\s*\[test\-decorator\] Compiling"
+assert_present "^\s*buildpacks\?:\s*test_buildpack (with decorator test_decorator)"
 cleanup
 
 echo
