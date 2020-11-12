@@ -1,3 +1,5 @@
+# meta-buildpack is no longer actively maintained by VMware.
+
 > <b>NOTE: Meta-buildback is being deprecated</b><br/>
 > Changes to the core CloudFoundry lifecycle process are making it hard to guarantee
 > on-going compatibility with meta-buildpack and decorators. Some of the use cases for
